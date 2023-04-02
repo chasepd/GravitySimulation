@@ -1,3 +1,3 @@
 ﻿
-using var game = new GravitySimulation.Game1();
+using var game = new GravitySimulation.GravitySimulationGame();
 game.Run();
