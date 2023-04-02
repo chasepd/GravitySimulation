@@ -16,8 +16,8 @@ namespace GravitySimulation
         {
             _graphics = new GraphicsDeviceManager(this)
             {
-                PreferredBackBufferWidth = 1920,
-                PreferredBackBufferHeight = 1080
+                PreferredBackBufferWidth = 1280,
+                PreferredBackBufferHeight = 720
             };
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
@@ -26,10 +26,7 @@ namespace GravitySimulation
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
-            base.Initialize();
-            
+            base.Initialize();            
         }
 
         protected override void LoadContent()

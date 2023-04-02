@@ -57,24 +57,32 @@ namespace GravitySimulation.Screens
 
             foreach(MassiveObject obj in _objects)
             {
+                List<MassiveObject> clearList = new List<MassiveObject>();
                 obj.Update(gameTime);
-                if(obj.ConsumedObject != null)
+                if(obj.ObjectsConsuming.Count > 0)
                 {
-                    if (obj.ConsumedObject.Mass <= 0)
+                    foreach (var objectBeingConsumed in obj.ObjectsConsuming)
                     {
-                        _objectsToRemove.Add(obj.ConsumedObject);
-                        obj.ConsumedObject = null;
+                        if (_collisionComponent.Contains(objectBeingConsumed))
+                            _collisionComponent.Remove(objectBeingConsumed);
+
+                        if (objectBeingConsumed.Mass <= 0)
+                        {
+                            _objectsToRemove.Add(objectBeingConsumed);
+                            clearList.Add(objectBeingConsumed);
+                        }
+                    }
+                    foreach(var objectConsumed in clearList)
+                    {
+                        obj.ObjectsConsuming.Remove(objectConsumed);
                     }
                 }               
                 CalculateGravitationalPulls(obj, gameTime.ElapsedGameTime.TotalSeconds);
                 CheckForOffScreen(obj);
             }
 
-            foreach(var obj in _objectsToRemove)
-            {
-                _objects.Remove(obj);
-                _collisionComponent.Remove(obj);
-            }
+            foreach(var obj in _objectsToRemove)            
+                _objects.Remove(obj);            
 
             var mouseState = MouseExtended.GetState();
 

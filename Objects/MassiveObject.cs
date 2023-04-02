@@ -16,54 +16,54 @@ namespace GravitySimulation.Objects
         public IShapeF Bounds { get; set; }
         public float Mass { get; set; }
 
-        private float consumeAmount = 0f;
+        protected float _radius;
 
-        public MassiveObject ConsumedObject { get; set; }
+        private const float consumeAmount = 800f;
+
+        public List<MassiveObject> ObjectsConsuming { get; set; }
 
         public MassiveObject(Vector2 position, float mass, Vector2 startingVelocity)
         {
             Mass = mass;
-            Bounds = new RectangleF(position.X, position.Y, (float)Math.Sqrt(Mass / Math.PI), (float)Math.Sqrt(Mass / Math.PI));//new CustomEllipseF(position, (float)Math.Sqrt(Mass / Math.PI), (float)Math.Sqrt(Mass / Math.PI));
+            _radius = (float)Math.Sqrt(Mass / Math.PI);
+            Bounds = new CircleF(new Point2(position.X, position.Y), _radius);
             Velocity = startingVelocity;
+            ObjectsConsuming = new List<MassiveObject>();
         }
 
         public void Update(GameTime gameTime)
         {
-            if (ConsumedObject != null && ConsumedObject.Mass > 0)
+            if (ObjectsConsuming.Count > 0)
             {
-                var amount = (float)(consumeAmount * gameTime.ElapsedGameTime.TotalSeconds);
-                ConsumedObject.Velocity = Velocity;
-                Mass += amount;
-                ConsumedObject.Mass -= amount;
-
-                Bounds = new RectangleF(Bounds.Position.X, Bounds.Position.Y, (float)Math.Sqrt(Mass / Math.PI), (float)Math.Sqrt(Mass / Math.PI));
-                ConsumedObject.Bounds = new RectangleF(ConsumedObject.Bounds.Position.X, ConsumedObject.Bounds.Position.Y, (float)Math.Sqrt(ConsumedObject.Mass / Math.PI), (float)Math.Sqrt(ConsumedObject.Mass / Math.PI));
-
+                foreach (var consumedObject in ObjectsConsuming)
+                {
+                    var amount = (float)(consumeAmount * gameTime.ElapsedGameTime.TotalSeconds);
+                    consumedObject.Velocity = Velocity;
+                    Mass += amount;
+                    consumedObject.Mass -= amount;
+                    _radius = (float)Math.Sqrt(Mass / Math.PI);
+                    Bounds = new CircleF(new Point2(Bounds.Position.X, Bounds.Position.Y), _radius);
+                    consumedObject._radius = (float)Math.Sqrt(consumedObject.Mass / Math.PI);
+                    consumedObject.Bounds = new CircleF(new Point2(consumedObject.Bounds.Position.X, consumedObject.Bounds.Position.Y), consumedObject._radius);
+                }               
             }
+
             Bounds.Position += Velocity * gameTime.GetElapsedSeconds();
         }
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.DrawCircle(Bounds.Position, 
-                (float)Math.Sqrt(Mass / Math.PI),
-                100,
-                Color.DimGray,
-                thickness: (float)Math.Sqrt(Mass / Math.PI));
+            spriteBatch.DrawCircle((CircleF)Bounds, 100, Color.DarkSlateGray, thickness:_radius);
         }
         public void OnCollision(CollisionEventArgs collisionInfo)
         {
-            var collisionObject = this;
             var otherObject = (MassiveObject)collisionInfo.Other;
-            if (otherObject != ConsumedObject)
+            if (!ObjectsConsuming.Contains(otherObject))
             {
                 if (Mass > otherObject.Mass)
                 {
-                    ConsumedObject = otherObject;
-                    consumeAmount = ConsumedObject.Mass / 2;
+                    ObjectsConsuming.Add(otherObject);
                 }
             }
-            
-
         }
     }
 }
